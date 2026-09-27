@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
     />
-    <title>Black Konsol | İşlem Yapılıyor</title>
+    <title>Black Konsol | Jailbreak</title>
     <style>
       * {
         box-sizing: border-box;
@@ -127,6 +127,7 @@
         letter-spacing: 0.12em;
       }
       #spin {
+        display: none;
         position: relative;
         width: 76px;
         height: 76px;
@@ -148,17 +149,49 @@
       @keyframes spin {
         to { transform: rotate(360deg); }
       }
+      #startJb {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 220px;
+        min-height: 70px;
+        padding: 16px 34px;
+        border: 0;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #258dff, #884cff);
+        color: #fff;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+        margin: 0 auto;
+        box-shadow: 0 12px 35px rgba(37, 141, 255, 0.25);
+        transition: transform 0.15s ease, filter 0.15s ease;
+      }
+      #startJb:hover {
+        filter: brightness(1.1);
+        transform: translateY(-2px);
+      }
+      #startJb:active {
+        transform: translateY(0);
+      }
+      #startJb:disabled {
+        opacity: 0.7;
+        cursor: wait;
+      }
       .main-title {
+        display: none;
         font-size: 28px;
         font-weight: 750;
         margin-bottom: 10px;
       }
       .hint {
+        display: none;
         color: #8294b0;
         font-size: 14px;
       }
       .steps {
-        display: flex;
+        display: none;
         justify-content: center;
         gap: 8px;
         margin-top: 30px;
@@ -202,7 +235,11 @@
       }
       body.done #spin,
       body.fail #spin {
-        display: none;
+        display: none !important;
+      }
+      body.done #startJb,
+      body.fail #startJb {
+        display: none !important;
       }
       body.fail #msg {
         display: block;
@@ -307,7 +344,7 @@
       </div>
       <main class="stage">
         <section class="card">
-          <div class="tag">PLAYSTATION 4</div>
+          <button id="startJb" type="button">TIKLA</button>
           <div id="spin"></div>
           <div class="main-title">Jailbreak denemesi yapılıyor...</div>
           <div class="hint">
@@ -333,7 +370,60 @@
       </footer>
     </div>
     <script type="module">
-      import "./jb.js?v=20";
+      const startButton = document.getElementById("startJb");
+      const spinner = document.getElementById("spin");
+      const title = document.querySelector(".main-title");
+      const hint = document.querySelector(".hint");
+      const steps = document.querySelector(".steps");
+
+      function setRunningUI() {
+        startButton.disabled = true;
+        startButton.style.display = "none";
+        spinner.style.display = "block";
+        title.style.display = "block";
+        hint.style.display = "block";
+        steps.style.display = "flex";
+      }
+
+      function setResultUI(ok) {
+        spinner.style.display = "none";
+        title.style.display = "none";
+        hint.style.display = "none";
+        steps.style.display = "none";
+        startButton.style.display = "none";
+        document.body.className = ok ? "done" : "fail";
+      }
+
+      startButton.addEventListener("click", async () => {
+        setRunningUI();
+
+        try {
+          await import("./jb.js?v=20");
+        } catch (e) {
+          console.error(e);
+          setResultUI(false);
+        }
+      });
+
+      // jb.js calls finishUI() internally. Override it through the DOM state
+      // as a safety net so the running message/spinner can never remain on
+      // the final success screen.
+      const observer = new MutationObserver(() => {
+        if (document.body.classList.contains("done")) {
+          spinner.style.display = "none";
+          title.style.display = "none";
+          hint.style.display = "none";
+          steps.style.display = "none";
+          startButton.style.display = "none";
+        } else if (document.body.classList.contains("fail")) {
+          spinner.style.display = "none";
+          title.style.display = "none";
+          hint.style.display = "none";
+          steps.style.display = "none";
+          startButton.style.display = "none";
+        }
+      });
+      observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
     </script>
   </body>
 </html>
